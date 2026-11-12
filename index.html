@@ -1,0 +1,112 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manikanchan Jewellery & Workshop</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f1e8;color:#29231b;font-family:Arial,sans-serif}
+header{background:#49331d;color:white;padding:22px 15px;text-align:center}
+header h2{margin:0 0 7px;color:#f4d58b}
+.container{padding:15px;max-width:700px;margin:auto}
+.card{background:white;padding:16px;border-radius:12px;margin-bottom:15px;box-shadow:0 2px 8px #0001}
+input,select,button{width:100%;padding:12px;margin:6px 0;border:1px solid #ccc;border-radius:7px;font-size:16px}
+button{background:#795323;color:white;border:0;font-weight:bold}
+.stats{display:flex;gap:10px}
+.stats div{background:#fff;padding:14px;border-radius:10px;flex:1;text-align:center}
+.item{border-bottom:1px solid #ddd;padding:12px 0}
+.small{color:#777;font-size:13px}
+</style>
+</head>
+<body>
+<header>
+<h2>MANIKANCHAN</h2>
+Jewellery & Workshop
+</header>
+<div class="container">
+<div class="stats">
+<div><b id="count">0</b><br>Items</div>
+<div><b id="weight">0</b><br>Total Weight (g)</div>
+</div>
+
+<div class="card">
+<h3>Add Jewellery Item</h3>
+<input id="code" placeholder="Item Code (e.g. MC001)">
+<input id="name" placeholder="Item Name">
+<select id="category">
+<option>Bracelet</option><option>Pati</option>
+<option>Chain</option><option>Ring</option>
+<option>Necklace</option><option>Earrings</option>
+<option>Bangles</option><option>Other</option>
+</select>
+<input id="wt" type="number" step="0.001" placeholder="Weight in grams">
+<input id="buy" type="number" placeholder="Purchase Price ₹">
+<input id="buydate" type="date">
+<input id="sell" type="number" placeholder="Sale Price ₹">
+<button onclick="addItem()">SAVE ITEM</button>
+</div>
+
+<div class="card">
+<h3>Search Jewellery</h3>
+<input id="search" placeholder="Search by code or name..." oninput="showItems()">
+<select id="filter" onchange="showItems()">
+<option value="">All Categories</option>
+<option>Bracelet</option><option>Pati</option>
+<option>Chain</option><option>Ring</option>
+<option>Necklace</option><option>Earrings</option>
+<option>Bangles</option><option>Other</option>
+</select>
+<div id="items"></div>
+</div>
+</div>
+
+<script>
+let data=JSON.parse(localStorage.getItem("manikanchan_items")||"[]");
+
+function addItem(){
+let code=document.getElementById("code").value.trim();
+let name=document.getElementById("name").value.trim();
+let category=document.getElementById("category").value;
+let wt=Number(document.getElementById("wt").value);
+let buy=Number(document.getElementById("buy").value);
+let buydate=document.getElementById("buydate").value;
+let sell=Number(document.getElementById("sell").value);
+
+if(!code||!name||wt<=0||buy<0){alert("Code, name, weight aur purchase price bharo");return}
+if(data.some(x=>x.code.toLowerCase()===code.toLowerCase())){
+alert("Ye item code pehle se hai!");return;
+}
+data.push({code,name,category,wt,buy,buydate,sell,status:"In Stock"});
+save();
+["code","name","wt","buy","buydate","sell"].forEach(id=>document.getElementById(id).value="");
+alert("Item saved successfully!");
+}
+
+function save(){
+localStorage.setItem("manikanchan_items",JSON.stringify(data));
+showItems();
+}
+
+function showItems(){
+let q=document.getElementById("search").value.toLowerCase();
+let f=document.getElementById("filter").value;
+let list=data.filter(x=>(x.code.toLowerCase().includes(q)||x.name.toLowerCase().includes(q))&&(!f||x.category===f));
+document.getElementById("count").innerText=data.length;
+document.getElementById("weight").innerText=data.reduce((s,x)=>s+x.wt,0).toFixed(3);
+document.getElementById("items").innerHTML=list.map(x=>`
+<div class="item">
+<b>${escapeHTML(x.name)}</b> (${escapeHTML(x.code)})<br>
+${escapeHTML(x.category)} | ${x.wt} g<br>
+Purchase: ₹${x.buy} | Sale: ₹${x.sell||0}<br>
+<span class="small">${x.buydate||"Date not added"} | ${x.status}</span>
+</div>`).join("")||"No items found";
+}
+function escapeHTML(s){
+return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+}
+showItems();
+</script>
+</body>
+</html>
